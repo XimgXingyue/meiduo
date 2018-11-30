@@ -1,7 +1,9 @@
 from django.shortcuts import render
 from rest_framework import status
+from rest_framework.generics import GenericAPIView, CreateAPIView
 from rest_framework_jwt.settings import api_settings
 
+from oauth.serializers import OAuthQQUserSerializer
 from .exceptions import OAuthQQAPIError
 from .models import OAuthQQUser
 # Create your views here.
@@ -23,8 +25,11 @@ class QQAuthURLView(APIView):
         return Response({'login_url': login_url})
 
 
-class QQAUthUserView(APIView):
+class QQAuthUserView(CreateAPIView):
     '''QQ login user    ?code=xxxxxx'''
+
+    serializer_class = OAuthQQUserSerializer
+
     def get(self,request):
         code = request.query_params.get('code')
         if not code:
@@ -45,13 +50,13 @@ class QQAUthUserView(APIView):
         try:
             QQuser = OAuthQQUser.objects.get(openid=openid)
 
-        # create token if there is the user
+        # create token if there is no such user
         except OAuthQQUser.DoesNotExist:
-            # this is the forst time user use QQ login
+            # this is the first time user use QQ login
             token = oauth.generate_user_access_token(openid)
             return Response({'access_token': token})
 
-        # create JWT token if there is no such user
+        # if there is the user
         else:
             user = QQuser.user
             jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
@@ -66,6 +71,23 @@ class QQAUthUserView(APIView):
                 'username': user.username
             })
             return response
+
+
+    # def post(self,request):
+    #     # get params
+    #
+    #     # judge params: use serializer
+    #
+    #     # generate jwt token
+    #
+    #     return Response({
+    #         'token':token,
+    #         'user_id': user.id,
+    #         'username' user.username
+    #     })
+
+
+
 
 
 

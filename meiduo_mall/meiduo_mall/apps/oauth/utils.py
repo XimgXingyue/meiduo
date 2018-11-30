@@ -3,6 +3,7 @@ from urllib.parse import urlencode, parse_qs
 from urllib.request import urlopen
 import logging
 from django.conf import settings
+from itsdangerous import BadData
 from itsdangerous import TimedJSONWebSignatureSerializer as TJWSSerializer
 
 from oauth import constants
@@ -32,7 +33,7 @@ class OAuthQQ:
         url += urlencode(params)
         return url
 
-    def get_access_token(self,code):
+    def get_access_token(self, code):
         url = 'https://graph.qq.com/oauth2.0/token?'
         params = {
             'grant_type': 'authorization_code',
@@ -52,13 +53,14 @@ class OAuthQQ:
             # access_token=FE04************************CCE2&expires_in=7776000&refresh_token=88E4************************BE14
             # get access_token value
             access_token = parse_qs(response_data).get('access_token')
+            # print(access_token)
         except Exception as e:
             logger.error('get access_token error: %s' % e)
             raise OAuthQQAPIError
         else:
             return access_token[0]
 
-    def get_openid(self,access_token):
+    def get_openid(self, access_token):
         url = 'https://graph.qq.com/oauth2.0/me?access_token=' + access_token
 
         try:
@@ -68,6 +70,7 @@ class OAuthQQ:
             # callback( {"client_id":"YOUR_APPID","openid":"YOUR_OPENID"} )\n;
             response_data = response_data[10:-4]
             openid = json.loads(response_data).get('openid')
+            # print(openid)
         except Exception as e:
             logger.error('get openid error: %s' % e)
             raise OAuthQQAPIError
@@ -78,4 +81,14 @@ class OAuthQQ:
         serializer = TJWSSerializer(settings.SECRET_KEY, expires_in=constants.QQ_USER_TOKEN_EXPIRES)
         token = serializer.dumps({'openid': openid})  # bytes
         return token.decode()
+
+    @staticmethod
+    def check_bind_access_token(access_token):
+        serializer = TJWSSerializer(settings.SECRET_KEY, expires_in=constants.QQ_USER_TOKEN_EXPIRES)
+        try:
+            data = serializer.loads(access_token)
+        except BadData:
+            return None
+        else:
+            return data['openid']
 
