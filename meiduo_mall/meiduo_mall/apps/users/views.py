@@ -1,6 +1,7 @@
 from django.shortcuts import render
 
 # Create your views here.
+from django_redis import get_redis_connection
 from rest_framework import mixins
 from rest_framework import status
 from rest_framework.decorators import action
@@ -10,7 +11,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
 
+from goods.models import SKU
 from users import constants
+from users.serializers import AddUserBrowsingHistorySerializer
 from . import serializers
 from users.models import User
 
@@ -172,3 +175,21 @@ class AddressViewSet(mixins.CreateModelMixin, mixins.UpdateModelMixin, GenericVi
         serializer.save()
         return Response(serializer.data)
 
+
+class UserBrowsingHistoryView(CreateAPIView):
+    serializer_class = AddUserBrowsingHistorySerializer
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user_id = request.user.id
+
+        redis_conn = get_redis_connection('history')
+        sku_id_list = redis_conn.lrange('history_%s' % user_id, 0, constants.USER_BROWSING_HISTORY_COUNTS_LIMIT)
+
+        skus = []
+        for sku_id in sku_id_list:
+            sku = SKU.objects.get(id=sku_id)
+            skus.append(sku)
+
+        serializer = serializers.SKUSerializer(skus, many=True)
+        return  Response(serializer.data)
