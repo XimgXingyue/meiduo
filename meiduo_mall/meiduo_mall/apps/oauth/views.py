@@ -3,6 +3,7 @@ from rest_framework import status
 from rest_framework.generics import GenericAPIView, CreateAPIView
 from rest_framework_jwt.settings import api_settings
 
+from cart.utils import merge_cart_cookie_to_redis
 from oauth.serializers import OAuthQQUserSerializer
 from .exceptions import OAuthQQAPIError
 from .models import OAuthQQUser
@@ -70,21 +71,17 @@ class QQAuthUserView(CreateAPIView):
                 'user_id': user.id,
                 'username': user.username
             })
+
+            # 合并购物车
+            response = merge_cart_cookie_to_redis(request, user, response)
             return response
 
-
-    # def post(self,request):
-    #     # get params
-    #
-    #     # judge params: use serializer
-    #
-    #     # generate jwt token
-    #
-    #     return Response({
-    #         'token':token,
-    #         'user_id': user.id,
-    #         'username' user.username
-    #     })
+    def post(self, request, *args, **kwargs):
+        response = super().post(request, *args, **kwargs)
+        # 合并购物车
+        user = self.user
+        response = merge_cart_cookie_to_redis(request, user, response)
+        return response
 
 
 

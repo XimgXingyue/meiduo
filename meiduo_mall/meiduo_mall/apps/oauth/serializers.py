@@ -79,4 +79,6 @@ class OAuthQQUserSerializer(serializers.ModelSerializer):
         token = jwt_encode_handler(payload)
         user.token = token
 
+        self.context['view'] = user  # 给视图添加上user属性， 以便在视图中调用（合并购物车时）
+
         return user
