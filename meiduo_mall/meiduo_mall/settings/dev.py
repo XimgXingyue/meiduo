@@ -171,6 +171,13 @@ CACHES = {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         }
     },
+    "cart": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/4",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    },
 }
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 SESSION_CACHE_ALIAS = "session"
@@ -247,7 +254,7 @@ CORS_ORIGIN_WHITELIST = (
     'www.meiduo.site:8080',
     'api.meiduo.site:8000'
 )
-CORS_ALLOW_CREDENTIALS = True  # 允许携带cookie
+CORS_ALLOW_CREDENTIALS = True  # 允许携带cookie(跨域请求时，允许后端使用cookie）
 
 # QQ登录参数
 QQ_CLIENT_ID = '101474184'
