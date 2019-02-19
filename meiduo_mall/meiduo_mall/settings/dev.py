@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     'goods.apps.GoodsConfig',
     'contents.apps.ContentsConfig',
     'django_crontab',  # 定时任务
+    'orders.apps.OrdersConfig',
 ]
 
 MIDDLEWARE = [
