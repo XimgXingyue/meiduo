@@ -47,6 +47,9 @@ INSTALLED_APPS = [
     'ckeditor',  # 富文本编辑器
     'ckeditor_uploader',  # 富文本编辑器上传图片模块
     'haystack',   # 管理搜索用哪个engine
+    'xadmin',
+    'crispy_forms',
+    'reversion',
 
     'users.apps.UsersConfig',
     'verifications.apps.VerificationsConfig',
